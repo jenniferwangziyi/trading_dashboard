@@ -1,0 +1,99 @@
+%%{init: {"theme": "base", "themeVariables": {"background": "#0d0d1a", "mainBkg": "#1a1a2e", "titleColor": "#ccccff", "fontFamily": "Arial, sans-serif"}, "flowchart": {"diagramPadding": 40}}}%%
+flowchart TB
+  %% ─────────────────────────────────────────────────
+  %% TITLE
+  %% ─────────────────────────────────────────────────
+  TITLE["🏦  Trader's Life: Before vs. After Databricks"]
+
+  %% ─────────────────────────────────────────────────
+  %% PANELS ROW
+  %% ─────────────────────────────────────────────────
+  subgraph ROW["Trader Daily Workflow Comparison"]
+    direction LR
+
+    subgraph BEFORE["  ❌  BEFORE — Fragmented Workflow  "]
+      direction TB
+
+      TRADER_B(["👤 Trader"])
+      BT["📊 Bloomberg Terminal\nMarket Prices"]
+      OMS["📦 OMS / EMS Black Box\nOrder State — Limited Visibility"]
+      XL["📋 Excel\nManual Slippage & Fill Rate Analysis"]
+      TAB["📉 Tableau / BI Tool\nScheduled Dashboard — Stale Data"]
+      DESK["🔧 Derivatives Desk System\nHedging Calculations"]
+      BROKER["📞 Phone / Chat to Broker\nManual Hedge Execution"]
+
+      TRADER_B -->|"pull prices manually"| BT
+      TRADER_B -->|"check order status"| OMS
+      OMS -.->|"⚠ manual export"| XL
+      BT -.->|"⚠ copy-paste"| XL
+      XL -.->|"⚠ context switching"| TAB
+      TRADER_B -->|"call or chat"| BROKER
+      TRADER_B -->|"hedge calc"| DESK
+      DESK -.->|"⚠ no audit trail"| BROKER
+      TAB -.->|"⚠ stale data"| TRADER_B
+
+      PAIN["❌ No AI assistance\n❌ Stale data everywhere\n❌ Manual data stitching\n❌ No audit trail\n❌ Constant context switching"]
+    end
+
+    BEFORE ==>|"Databricks\ntransforms\nthe trading\nworkflow"| AFTER
+
+    subgraph AFTER["  ✅  AFTER — Unified Databricks Platform  "]
+      direction TB
+
+      MKT["📡 Live Market Data\nStreaming Ingest"]
+      DLT["⚡ DLT Pipeline\nBronze → Silver → Gold\nAlways Current"]
+      LB["🗄 Lakebase\nMutable Order State\n+ Full Audit Trail"]
+      APP["🖥 Databricks App\nOrder Blotter + Actions + Charts\nOne Unified Surface"]
+      LV["📊 Lakeview Dashboard\nReal-Time — All Stakeholders"]
+      AI["🤖 Claude AI Chatbot\nNext-Action Recommendations\nLive Context Awareness"]
+      TRADER_A(["👤 Trader"])
+
+      MKT --> DLT
+      DLT --> LB
+      DLT --> APP
+      LB --> APP
+      APP --> LV
+      APP --> TRADER_A
+      AI --> TRADER_A
+      DLT --> AI
+      LB --> AI
+
+      GAIN["✅ One platform\n✅ Real-time data\n✅ AI-assisted decisions\n✅ Full audit trail\n✅ Zero context switching"]
+    end
+  end
+
+  TITLE --> ROW
+
+  %% ─────────────────────────────────────────────────
+  %% STYLES — TITLE AND OUTER WRAPPER
+  %% ─────────────────────────────────────────────────
+  style TITLE fill:#1a1a3e,stroke:#6666cc,stroke-width:3px,color:#ccccff,font-size:20px,font-weight:bold
+  style ROW fill:#111122,stroke:#333355,stroke-width:2px,color:#aaaacc
+
+  %% ─────────────────────────────────────────────────
+  %% STYLES — BEFORE (red/orange tones)
+  %% ─────────────────────────────────────────────────
+  style BEFORE fill:#2d0a0a,stroke:#cc3300,stroke-width:3px,color:#ffcccc
+
+  style TRADER_B fill:#7a1a00,stroke:#ff5500,stroke-width:2px,color:#ffffff
+  style BT fill:#5c1a00,stroke:#cc4400,stroke-width:2px,color:#ffddcc
+  style OMS fill:#5c1a00,stroke:#cc4400,stroke-width:2px,color:#ffddcc
+  style XL fill:#5c1a00,stroke:#cc4400,stroke-width:2px,color:#ffddcc
+  style TAB fill:#5c1a00,stroke:#cc4400,stroke-width:2px,color:#ffddcc
+  style DESK fill:#5c1a00,stroke:#cc4400,stroke-width:2px,color:#ffddcc
+  style BROKER fill:#5c1a00,stroke:#cc4400,stroke-width:2px,color:#ffddcc
+  style PAIN fill:#3d0000,stroke:#991100,stroke-width:2px,color:#ff8888
+
+  %% ─────────────────────────────────────────────────
+  %% STYLES — AFTER (green tones)
+  %% ─────────────────────────────────────────────────
+  style AFTER fill:#0a2d0a,stroke:#00aa44,stroke-width:3px,color:#ccffcc
+
+  style TRADER_A fill:#004d1a,stroke:#00cc55,stroke-width:2px,color:#ffffff
+  style MKT fill:#003d14,stroke:#00aa44,stroke-width:2px,color:#ccffdd
+  style DLT fill:#003d14,stroke:#00aa44,stroke-width:2px,color:#ccffdd
+  style LB fill:#003d14,stroke:#00aa44,stroke-width:2px,color:#ccffdd
+  style APP fill:#004d1a,stroke:#00cc55,stroke-width:2px,color:#ccffdd
+  style LV fill:#003d14,stroke:#00aa44,stroke-width:2px,color:#ccffdd
+  style AI fill:#1a4d00,stroke:#55cc00,stroke-width:2px,color:#ddffcc
+  style GAIN fill:#003300,stroke:#006622,stroke-width:2px,color:#88ff99

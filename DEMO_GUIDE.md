@@ -18,29 +18,17 @@ This demo shows how Databricks can power the full execution management stack:
 
 Before a platform like this, a typical buy-side desk operates across a fragmented stack of disconnected tools — creating delays, blind spots, and manual overhead at exactly the moments when speed and accuracy matter most.
 
-### How traders work today (without this platform)
-
-| Pain Point | Reality Without the Platform |
-|---|---|
-| **Market data is siloed** | Traders pull live prices from Bloomberg Terminal or Reuters Eikon — expensive per-seat licenses, no integration with internal order data. There's no single view combining external market prices with your own fills, slippage, or VWAP benchmarks. |
-| **Order state lives in the OMS black box** | The execution management system (EMS/OMS) tracks orders internally, but analytics are limited to what the vendor exposes. Custom slippage analysis, fill rate by strategy, or participation rate over time requires exporting data to Excel or a separate BI tool — manually, after the fact. |
-| **No centralized data layer** | Market ticks, order records, execution fills, and reference data (ETF constituents, hedge instruments) live in separate systems with different schemas. Building a joined, consistent view requires ETL pipelines owned by a separate data engineering team — slow to change and expensive to maintain. |
-| **Real-time analytics require specialists** | Any intraday analytics — fill rate trends, slippage vs. arrival, VWAP benchmark comparison — require a quant or data engineer to write queries against raw tick data. Traders wait hours or days for reports. Nothing is self-serve. |
-| **Trader actions have no audit trail** | When a trader cancels an order or adjusts a size, that action is recorded in the OMS but audit trails are often incomplete or inaccessible for post-trade review and compliance. Reconstructing "who changed what and when" is a manual process. |
-| **Hedging requires switching tools** | To place a hedge, a trader must context-switch to a separate derivatives desk system or call a broker, manually look up the right instrument, calculate delta-adjusted quantity, and enter the order separately — all while monitoring the original position. |
-| **No AI-assisted decision making** | Traders monitor 10+ screens simultaneously. Spotting that an order is falling behind schedule, identifying which positions need hedging, or recognizing a participation rate anomaly requires constant human attention. There's no system that surfaces "you should act on this now." |
-| **Dashboard and actions are separate** | Risk managers see dashboards in Tableau or PowerBI (updated on a schedule, not real-time). Traders act in the OMS. These are completely separate surfaces — there's no single place where you can see the data *and* take action on it in the same workflow. |
-
-### What this platform changes
-
-| Capability | With Databricks |
-|---|---|
-| **Unified real-time data** | Market ticks, orders, and fills stream into a single Delta Lake medallion pipeline. One schema, one namespace, always current. |
-| **Self-serve analytics** | Gold-layer materialized views surface fill rate, slippage, and participation rate in seconds — no data engineering tickets required. |
-| **Mutable state with audit trail** | Lakebase (PostgreSQL) stores live order state with full before/after audit logging for every trader action. Compliance-ready by default. |
-| **Actions + analytics in one surface** | The Databricks App combines live charts, KPI cards, and the order blotter with action buttons — traders see the data and act on it in one place. |
-| **AI-powered recommendations** | The Claude-powered chatbot reads live market snapshot, active orders, and trader performance in real time, then recommends what to prioritize, which orders are at risk, and when to hedge. |
-| **No vendor lock-in on analytics** | Built on open Delta Lake — any BI tool, ML model, or custom app can read the same data. No per-seat terminal fees for analytics. |
+| Area | ❌ Without Databricks | ✅ With Databricks |
+|---|---|---|
+| **Market data** | Pulled from Bloomberg Terminal or Reuters Eikon — expensive per-seat licenses, siloed from internal order data. No single view combining external prices with your own fills, slippage, or VWAP benchmarks. | Live ticks stream into Delta Lake every 5 seconds. Market prices, fills, and VWAP are all in the same schema — query them together instantly. |
+| **Order visibility** | OMS/EMS is a black box. Analytics are limited to what the vendor exposes. Custom metrics (fill rate by strategy, participation rate over time) require manual Excel exports — after the fact. | Gold-layer materialized views (DLT) surface fill rate, slippage, and participation rate in real time. Self-serve, no tickets, no exports. |
+| **Centralized data layer** | Market ticks, orders, fills, and reference data live in separate systems with different schemas. A joined, consistent view requires a data engineering team — slow to build and expensive to change. | One Unity Catalog schema (`jennifer_wang.etf_trading`) holds everything — Bronze raw data through Gold analytics — with a single 3-layer namespace. |
+| **Real-time analytics** | Intraday analytics require a quant or data engineer to query raw tick data. Traders wait hours or days for reports. Nothing is self-serve. | DLT runs continuously. The Databricks App and Lakeview Dashboard refresh in seconds from always-current Gold tables. |
+| **Trader actions & audit trail** | Cancels, size adjustments, and price changes are recorded in the OMS, but audit trails are often incomplete or inaccessible. Reconstructing "who changed what and when" is a manual compliance exercise. | Every action (cancel, execute, adjust, hedge) is written to Lakebase with a full before/after JSON audit log — compliance-ready by default. |
+| **Hedging** | Context-switch to a separate derivatives desk system or call a broker, manually look up the right instrument, calculate delta-adjusted quantity, and enter the order in a separate system — while still watching the original position. | The hedge modal in the app shows available futures and options, pre-fills delta-adjusted quantity, and submits the hedge in two clicks — without leaving the screen. |
+| **AI-assisted decisions** | Traders monitor 10+ screens simultaneously. Spotting a lagging order, a hedging opportunity, or a participation rate anomaly requires constant human attention. There's no system that says "act on this now." | The Claude-powered chatbot reads the live market snapshot, active orders, and performance data in real time, then surfaces recommendations — which orders to prioritize, which positions to hedge, where slippage is worst. |
+| **Dashboard vs. actions** | Risk managers view Tableau/PowerBI dashboards (updated on a schedule). Traders act in the OMS. Two completely separate surfaces — no single place to see data *and* act on it. | The Databricks App is one surface: live charts, KPI cards, and the order blotter with per-row action buttons — see the data and take action in the same workflow. |
+| **Vendor lock-in** | Analytics tied to OMS vendor capabilities and Bloomberg/Reuters licenses. Custom analytics require separate tools and data pipelines. | Built on open Delta Lake. Any BI tool, ML model, or custom app can read the same tables. No per-seat terminal fees for analytics. |
 
 ---
 
