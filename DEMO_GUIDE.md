@@ -9,6 +9,7 @@ This demo shows how Databricks can power the full execution management stack:
 - **Medallion pipeline** (Bronze → Silver → Gold) for analytics-ready data
 - **Mutable order state** via Lakebase (PostgreSQL) for trader actions with full audit trail
 - **Interactive trader UI** (Databricks App) with live charts and order management
+- **AI trading assistant** (Claude via Databricks Foundation Model API) with live market context
 - **Stakeholder analytics dashboard** (Lakeview) for risk managers and ops
 
 ---
@@ -28,6 +29,7 @@ This demo shows how Databricks can power the full execution management stack:
                                               - Live order blotter + KPI cards
                                               - Trader actions: Cancel / Execute / Adjust / Hedge
                                               - Intraday price charts (Recharts)
+                                              - AI chatbot (Claude) with live market context
 ```
 
 ---
@@ -44,6 +46,7 @@ This demo shows how Databricks can power the full execution management stack:
 | **SQL Warehouse (Serverless)** | Powers all FastAPI backend queries and Lakeview dashboard queries |
 | **Unity Catalog** | All tables and volumes in `jennifer_wang.etf_trading` with 3-layer namespace |
 | **Databricks Jobs** | Always-on streaming simulator (5s loop) deployed as a continuously-running job |
+| **Foundation Model API** | Powers the AI trading assistant chatbot via `databricks-claude-sonnet-4-6`; called from FastAPI using the Databricks SDK (`w.serving_endpoints.query()`) |
 
 ---
 
@@ -56,8 +59,11 @@ etf-trading-demo/
 │                                  # Run locally (not as cluster job — workspace IP ACL)
 │
 ├── 02_simulator/
-│   └── market_data_simulator.py  # PySpark streaming producer, 5s loop
-│                                  # Deployed as always-on Databricks Job (Job ID: 32824723212989)
+│   ├── market_data_simulator.py       # PySpark streaming producer, 5s loop
+│   │                                  # Deployed as always-on Databricks Job (Job ID: 32824723212989)
+│   └── market_data_simulator_local.py # SDK-based simulator (no PySpark) — runs locally
+│                                       # Bypasses workspace IP ACL; batch-inserts 5 ticks/ETF per write
+│                                       # (timestamps 1s apart) for 1s chart resolution
 │
 ├── 03_dlt_pipeline/
 │   └── etf_trading_pipeline.py   # DLT Continuous pipeline: Bronze → Silver → Gold
@@ -67,7 +73,7 @@ etf-trading-demo/
 │   └── lakebase_setup.py         # Provisions Lakebase instance, creates PG tables, initial sync
 │
 ├── 05_app/
-│   ├── app.py                    # FastAPI backend (10 endpoints)
+│   ├── app.py                    # FastAPI backend (11 endpoints incl. /api/chat)
 │   ├── app.yaml                  # Databricks App config
 │   ├── requirements.txt
 │   └── frontend/
@@ -76,10 +82,11 @@ etf-trading-demo/
 │           ├── MarketTicker.jsx  # Scrolling live ticker bar (auto-refresh 5s)
 │           ├── KpiCards.jsx      # Fill rate, slippage, participation, active orders
 │           ├── OrderBlotter.jsx  # Sortable table with per-row action buttons
-│           ├── PriceChart.jsx    # Intraday price + VWAP line (Recharts)
+│           ├── PriceChart.jsx    # Intraday price + VWAP line (self-polls every 2s)
 │           ├── AnalyticsCharts.jsx
 │           ├── AdjustModal.jsx   # Qty + price adjustment with notional preview
-│           └── HedgeModal.jsx    # Futures/options instrument picker
+│           ├── HedgeModal.jsx    # Futures/options instrument picker
+│           └── ChatBot.jsx       # Floating AI chatbot panel (Claude-powered, bottom-right)
 │
 └── 06_dashboard/
     └── deploy_dashboard.py       # Lakeview 4-page dashboard deploy script
@@ -160,6 +167,7 @@ etf-trading-demo/
 | PUT | `/api/orders/{id}/size` | **Lakebase** | Adjust order quantity |
 | PUT | `/api/orders/{id}/price` | **Lakebase** | Adjust price limit |
 | POST | `/api/orders/{id}/hedge` | **Lakebase** | Submit hedge request |
+| POST | `/api/chat` | `market_snapshot_gold` + `order_analytics_gold` + `trading_performance_gold` | AI chatbot — fetches live context, calls `databricks-claude-sonnet-4-6`, returns recommendation |
 
 ---
 
@@ -238,8 +246,11 @@ python deploy_dashboard.py
 | Simulator job fails | `data_security_mode` not set → UC disabled | Set `SINGLE_USER` on cluster config |
 | App shows no data | App service principal lacks UC permissions | Grant `USE CATALOG`, `USE SCHEMA`, `SELECT` to app SP |
 | `/api/orders` 500 error | Fallback query referenced non-existent columns in `raw_orders` | Changed fallback to query `order_analytics_gold` |
-| Intraday chart empty | Simulator was failing → no new ticks with today's timestamps | Fix simulator cluster mode and restart |
+| Intraday chart empty | Simulator was failing → no new ticks with today's timestamps | Run `market_data_simulator_local.py` locally instead |
 | DLT stuck `WAITING_FOR_RESOURCES` | Classic cluster slow provisioning | Set `serverless: true` on pipeline |
+| Simulator can't write every 1s | Warehouse INSERT API takes 5–7s, overwhelms 1s sleep | Batch-write 5 rows per ETF per call with 1s-apart timestamps |
+| Chat returns "Internal Server Error" | `w.config.token` is `None` in App OAuth context; `requests` not installed | Use `w.serving_endpoints.query()` with SDK `ChatMessage` objects |
+| Chat `ValueError` on large numbers | Warehouse returns large floats as strings in scientific notation (`2.5972451E7`) | Cast via `int(float(...))` instead of `int(...)` directly |
 
 ---
 

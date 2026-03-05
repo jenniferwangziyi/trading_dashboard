@@ -13,6 +13,7 @@
                                                [Databricks App: React + FastAPI]
                                                - Order blotter + KPIs
                                                - Trader actions: cancel/exec/adjust/hedge
+                                               - AI chatbot (Claude) with live market context
 ```
 
 ## Execution Order
@@ -73,8 +74,10 @@ python deploy_dashboard.py
 | `02_simulator/market_data_simulator.py` | Streaming tick generator (5s loop) |
 | `03_dlt_pipeline/etf_trading_pipeline.py` | DLT Bronze→Silver→Gold pipeline |
 | `04_lakebase/lakebase_setup.py` | Lakebase provisioning + order sync |
-| `05_app/app.py` | FastAPI backend (10 endpoints) |
+| `05_app/app.py` | FastAPI backend (11 endpoints incl. `/api/chat`) |
 | `05_app/frontend/` | React + Recharts trader UI |
+| `05_app/frontend/src/ChatBot.jsx` | Floating AI chatbot panel (Claude-powered) |
+| `02_simulator/market_data_simulator_local.py` | Local SDK-based simulator (1s tick resolution) |
 | `06_dashboard/deploy_dashboard.py` | Lakeview 4-page dashboard deploy |
 
 ## ETF Universe
@@ -87,3 +90,4 @@ SPY, QQQ, IVV, VTI, XLK, XLF + /ES futures, /NQ futures, SPY put options
 - **Real-time charts**: intraday price + VWAP line, execution analytics scatter
 - **Market ticker bar**: scrolling live prices for all ETFs
 - **KPI cards**: fill rate, participation rate, slippage, active order count
+- **AI trading assistant**: floating chatbot powered by Claude (`databricks-claude-sonnet-4-6`) with live market snapshot, active orders, and trader performance as context — recommends next best actions
