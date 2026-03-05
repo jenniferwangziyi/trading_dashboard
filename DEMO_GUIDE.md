@@ -14,6 +14,36 @@ This demo shows how Databricks can power the full execution management stack:
 
 ---
 
+## The Problem: Trading Without a Unified Platform
+
+Before a platform like this, a typical buy-side desk operates across a fragmented stack of disconnected tools — creating delays, blind spots, and manual overhead at exactly the moments when speed and accuracy matter most.
+
+### How traders work today (without this platform)
+
+| Pain Point | Reality Without the Platform |
+|---|---|
+| **Market data is siloed** | Traders pull live prices from Bloomberg Terminal or Reuters Eikon — expensive per-seat licenses, no integration with internal order data. There's no single view combining external market prices with your own fills, slippage, or VWAP benchmarks. |
+| **Order state lives in the OMS black box** | The execution management system (EMS/OMS) tracks orders internally, but analytics are limited to what the vendor exposes. Custom slippage analysis, fill rate by strategy, or participation rate over time requires exporting data to Excel or a separate BI tool — manually, after the fact. |
+| **No centralized data layer** | Market ticks, order records, execution fills, and reference data (ETF constituents, hedge instruments) live in separate systems with different schemas. Building a joined, consistent view requires ETL pipelines owned by a separate data engineering team — slow to change and expensive to maintain. |
+| **Real-time analytics require specialists** | Any intraday analytics — fill rate trends, slippage vs. arrival, VWAP benchmark comparison — require a quant or data engineer to write queries against raw tick data. Traders wait hours or days for reports. Nothing is self-serve. |
+| **Trader actions have no audit trail** | When a trader cancels an order or adjusts a size, that action is recorded in the OMS but audit trails are often incomplete or inaccessible for post-trade review and compliance. Reconstructing "who changed what and when" is a manual process. |
+| **Hedging requires switching tools** | To place a hedge, a trader must context-switch to a separate derivatives desk system or call a broker, manually look up the right instrument, calculate delta-adjusted quantity, and enter the order separately — all while monitoring the original position. |
+| **No AI-assisted decision making** | Traders monitor 10+ screens simultaneously. Spotting that an order is falling behind schedule, identifying which positions need hedging, or recognizing a participation rate anomaly requires constant human attention. There's no system that surfaces "you should act on this now." |
+| **Dashboard and actions are separate** | Risk managers see dashboards in Tableau or PowerBI (updated on a schedule, not real-time). Traders act in the OMS. These are completely separate surfaces — there's no single place where you can see the data *and* take action on it in the same workflow. |
+
+### What this platform changes
+
+| Capability | With Databricks |
+|---|---|
+| **Unified real-time data** | Market ticks, orders, and fills stream into a single Delta Lake medallion pipeline. One schema, one namespace, always current. |
+| **Self-serve analytics** | Gold-layer materialized views surface fill rate, slippage, and participation rate in seconds — no data engineering tickets required. |
+| **Mutable state with audit trail** | Lakebase (PostgreSQL) stores live order state with full before/after audit logging for every trader action. Compliance-ready by default. |
+| **Actions + analytics in one surface** | The Databricks App combines live charts, KPI cards, and the order blotter with action buttons — traders see the data and act on it in one place. |
+| **AI-powered recommendations** | The Claude-powered chatbot reads live market snapshot, active orders, and trader performance in real time, then recommends what to prioritize, which orders are at risk, and when to hedge. |
+| **No vendor lock-in on analytics** | Built on open Delta Lake — any BI tool, ML model, or custom app can read the same data. No per-seat terminal fees for analytics. |
+
+---
+
 ## Architecture
 
 ```
