@@ -1,0 +1,8 @@
+command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: 65bc200a57dac15e
+  - name: CATALOG
+    value: jennifer_wang
+  - name: SCHEMA
+    value: etf_trading
