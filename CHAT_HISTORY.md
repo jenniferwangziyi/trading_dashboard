@@ -8,17 +8,78 @@
 ## Session 1 — Initial Build & Deployment
 
 **Jennifer:**
-> Implement the following plan:
 
-*(Followed by the full ETF Trading Execution & Order Management implementation plan, covering:)*
-- Architecture: Simulator → Delta Bronze → DLT Pipeline → Gold tables + Lakebase + Databricks App + Lakeview Dashboard
-- Schema: `jennifer_wang.etf_trading` with Bronze/Silver/Gold tables, reference tables, Lakebase PG tables
-- ETF universe: SPY, QQQ, IVV, VTI, XLK, XLF + hedge instruments (/ES, /NQ, SPY puts)
-- 6-step execution order: seed data → simulator job → DLT pipeline → Lakebase setup → Databricks App → Lakeview Dashboard
+```
+Implement the following plan:
 
-**Claude:** *(Built and deployed the full demo: `seed_etf_data.py`, `market_data_simulator.py`, `etf_trading_pipeline.py`, `lakebase_setup.py`, `app.py` with 10 FastAPI endpoints, all React components — `App.jsx`, `MarketTicker.jsx`, `KpiCards.jsx`, `OrderBlotter.jsx`, `PriceChart.jsx`, `AnalyticsCharts.jsx`, `AdjustModal.jsx`, `HedgeModal.jsx` — and `deploy_dashboard.py`. DLT pipeline deployed with serverless compute, Databricks App deployed as `manufacturing-assistant`.)*
+# ETF Trading Execution & Order Management Demo — Implementation Plan
 
-> **Note:** Between "implement the plan" and Session 2 below, there were additional exchanges around fixing the Lakeview dashboard visualizations (broken widgets) and initial DLT pipeline issues. These were also compacted and are not fully recoverable verbatim.
+## Context
+Build a realistic ETF trading demo for an execution & order management use case. Traders need a
+live dashboard plus an interactive app to monitor orders, view market data, and take actions
+(cancel/execute/adjust/hedge). Uses Databricks-native stack: DLT for pipelines, Lakeview for
+analytics dashboard, Lakebase (PostgreSQL) for mutable order state, Databricks App for the
+interactive trader UI (which also contains embedded charts/dashboard panels).
+
+## Architecture Overview
+
+[Streaming Simulator Notebook]  ← runs on cluster, emits ticks every 5s
+         ↓ writes to Delta (acts as message bus consumer sink)
+[raw_market_data_stream Delta table]  ←  seed script (2-day historical backfill)
+         ↓ DLT reads as structured stream
+[DLT Pipeline: Continuous mode]
+  Bronze → Silver → Gold Delta tables
+         ↓                          ↓
+[Lakeview Dashboard]         [Lakebase PostgreSQL]
+ (read-only analytics)              ↓
+                         [Databricks App: React + FastAPI]
+                         - Embedded dashboard panels (charts, KPIs)
+                         - Trader actions: cancel/execute/adjust/hedge
+
+## Step 1: Schema & Seed Data
+Schema: jennifer_wang.etf_trading
+ETF Universe: SPY, QQQ, IVV, VTI, XLK, XLF + /ES futures, /NQ futures, SPY puts
+
+Reference tables: etf_reference, etf_constituents, hedge_instruments, traders
+Bronze tables: raw_market_data, raw_orders, raw_executions
+Seed: ~2,000 market ticks, ~150 orders, ~800 execution records
+
+## Step 2: Streaming Market Data Simulator
+Loops every 5s, generates random-walk tick data, appends to raw_market_data.
+~5% chance per tick: generate new order. Also generates fills for PENDING orders.
+Deployed as always-on Databricks Job on Single-Node cluster.
+
+## Step 3: DLT Pipeline
+Pipeline: etf_trading_pipeline, Mode: Continuous, Target: jennifer_wang.etf_trading
+Silver: market_data_silver (dedupe, mid_price, spread_bps), orders_silver (notional),
+        executions_silver (slippage_bps)
+Gold:   market_snapshot_gold (latest price per ticker), order_analytics_gold (fill_rate,
+        slippage, participation), trading_performance_gold (per trader per day)
+
+## Step 4: Lakebase (PostgreSQL — Mutable Order State)
+Tables: live_orders (current state), order_actions (audit trail with JSONB before/after),
+        hedge_requests (linked to parent orders)
+
+## Step 5: Lakeview Dashboard
+4 pages: Order Monitor, Market Overview, Execution Analytics, Trader Performance
+
+## Step 6: Databricks App
+Stack: React (Vite) + FastAPI
+Layout: Market ticker bar → KPI cards + Order blotter (with Cancel/Execute/Edit/Hedge
+        per-row actions) → Price chart + Analytics charts → Adjust modal + Hedge modal
+10 FastAPI endpoints covering market data, orders, analytics, performance,
+hedge instruments, and all 5 trader action mutations.
+React components: MarketTicker, KpiCards, OrderBlotter, PriceChart, AnalyticsCharts,
+                  AdjustModal, HedgeModal
+
+## Execution Order
+1. seed_etf_data.py  2. simulator job  3. DLT pipeline  4. lakebase_setup.py
+5. Databricks App    6. Lakeview Dashboard
+```
+
+**Claude:** *(Built and deployed the full demo: all files in the 6-directory structure above, DLT pipeline deployed with serverless compute, Databricks App deployed as `manufacturing-assistant`.)*
+
+> **Note:** Between Session 1 and Session 2 there were additional exchanges around fixing broken Lakeview dashboard visualizations and DLT pipeline issues. These were compacted by Claude Code's context management and are not fully recoverable verbatim.
 
 ---
 
